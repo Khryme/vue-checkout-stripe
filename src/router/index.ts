@@ -1,6 +1,5 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
 import FormComponent from "@/components/FormComponent.vue";
 
 Vue.use(VueRouter);
