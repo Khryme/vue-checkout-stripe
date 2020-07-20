@@ -1,4 +1,4 @@
-const COMPONENT_STYLE = {
+export const COMPONENT_STYLE = {
     base: {
         fontSize: '16px',
         fontSmoothing: 'antialiased',
@@ -7,7 +7,8 @@ const COMPONENT_STYLE = {
     },
     complete: {}
 }
-const COMPONENT_OPTIONS = {
+
+export const COMPONENT_OPTIONS = {
     style: COMPONENT_STYLE,
     classes: {
         base: 'form-stripe-element',
