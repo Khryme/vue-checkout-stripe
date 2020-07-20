@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SEPA Payments</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script type="application/javascript">
+        // TODO: handle different public key for stripe
+        var urlParams = new URLSearchParams(window.location.search);
+
+        var publicKey = urlParams.get('pk');
+        var clientSecret = urlParams.get('cs');
+        // var host = urlParams.get('host');
+        var customerEmail = urlParams.get('customerEmail');
+        // var plan = urlParams.get('plan');
+
+        var stripe = Stripe(publicKey);
+        var elements = stripe.elements();
+    </script>
+</head>
+<body>
+<form action="/form" method="post" id="setup-form">
+    <div class="form-row inline">
+        <div class="col">
+            <label for="accountholder-name">
+                Name
+            </label>
+            <input
+                    id="accountholder-name"
+                    name="accountholder-name"
+                    placeholder="Jenny Rosen"
+                    required
+            />
+        </div>
+
+        <div class="col">
+            <label for="email">
+                Email Address
+            </label>
+            <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    disabled
+            />
+        </div>
+        <script>
+            var el = document.getElementById("email");
+            el.value = customerEmail;
+        </script>
+    </div>
+
+    <div class="form-row">
+        <!--
+          Using a label with a for attribute that matches the ID of the
+          Element container enables the Element to automatically gain focus
+          when the customer clicks on the label.
+        -->
+        <label for="iban-element">
+            IBAN
+        </label>
+        <div id="iban-element">
+            <!-- A Stripe Element will be inserted here. -->
+        </div>
+    </div>
+
+    <!-- Add the client_secret from the SetupIntent as a data attribute   -->
+    <button id="submit-button">
+        Set up SEPA Direct Debit
+    </button>
+
+    <!-- Used to display form errors. -->
+    <div id="error-message" role="alert"></div>
+
+    <!-- Display mandate acceptance text. -->
+    <div id="mandate-acceptance">
+        <!--TODO: this need to be generated dynamically -->
+        By providing your IBAN and confirming this payment, you authorise (A) Aranha bjj and Stripe, our payment service provider, to send instructions to your bank to debit your account and (B) your bank to debit your account in accordance with those instructions. You are entitled to a refund from your bank under the terms and conditions of your agreement with your bank. A refund must be claimed within eight weeks starting from the date on which your account was debited.
+    </div>
+</form>
+<script>
+    var style = {
+        base: {
+            color: '#32325d',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            },
+            ':-webkit-autofill': {
+                color: '#32325d',
+            },
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a',
+            ':-webkit-autofill': {
+                color: '#fa755a',
+            },
+        },
+    };
+
+    var options = {
+        style: style,
+        supportedCountries: ['SEPA'],
+        // Elements can use a placeholder as an example IBAN that reflects
+        // the IBAN format of your customer's country. If you know your
+        // customer's country, we recommend that you pass it to the Element as the
+        // placeholderCountry.
+        placeholderCountry: 'ES',
+    };
+
+    // Create an instance of the IBAN Element
+    var iban = elements.create('iban', options);
+
+    // Add an instance of the IBAN Element into the `iban-element` <div>
+    iban.mount('#iban-element');
+</script>
+<script>
+    var form = document.getElementById('setup-form');
+    var accountholderName = document.getElementById('accountholder-name');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        stripe.confirmSepaDebitSetup(
+            clientSecret,
+            {
+                payment_method: {
+                    sepa_debit: iban,
+                    billing_details: {
+                        name: accountholderName.value,
+                        email: customerEmail,
+                    },
+                },
+            }
+        );
+    });
+</script>
+</body>
+</html>
