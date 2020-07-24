@@ -3,34 +3,34 @@
         <form v-on:submit.prevent="submitForm">
             <div class="row">
                 <div class="col-25">
-                    <label for="fname">First Name</label>
+                    <label for="firstName">{{$t('firstName.label')}}</label>
                 </div>
                 <div class="col-75">
                     <input
                             type="text"
-                            id="fname"
-                            name="firstname"
-                            placeholder="Your name.."
+                            id="firstName"
+                            name="firstName"
+                            :placeholder="$t('firstName.placeholder')"
                             v-model="name"
                     />
                 </div>
             </div>
             <div class="row">
                 <div class="col-25">
-                    <label for="lname">Last Name</label>
+                    <label for="lastName">{{$t('lastName.label')}}</label>
                 </div>
                 <div class="col-75">
                     <input
                             type="text"
-                            id="lname"
-                            name="lastname"
-                            placeholder="Your last name.."
+                            id="lastName"
+                            name="lastName"
+                            :placeholder="$t('lastName.placeholder')"
                     />
                 </div>
             </div>
             <div class="row">
                 <div class="col-25">
-                    <label for="email">Email</label>
+                    <label for="email">{{$t('label.email')}}</label>
                 </div>
                 <div class="col-75">
                     <input
@@ -38,6 +38,7 @@
                             id="email"
                             name="email"
                             placeholder="test@test.com"
+                            disabled
                     />
                 </div>
             </div>
@@ -51,13 +52,7 @@
             </div>
             <div class="row">
                 <div class="label">
-                    By providing your IBAN and confirming this payment, you authorise (A)
-                    Aranha bjj and Stripe, our payment service provider, to send
-                    instructions to your bank to debit your account and (B) your bank to
-                    debit your account in accordance with those instructions. You are
-                    entitled to a refund from your bank under the terms and conditions of
-                    your agreement with your bank. A refund must be claimed within eight
-                    weeks starting from the date on which your account was debited.
+                    {{$t('label.disclaimer', {society: '(A) Aranha bjj'})}}
                 </div>
             </div>
             <div class="row">
