@@ -1,9 +1,9 @@
 export const COMPONENT_STYLE = {
     base: {
-        fontSize: '16px',
+        fontSize: '13px',
         fontSmoothing: 'antialiased',
-        fontWeight: '500',
-        lineHeight: '24px'
+        fontWeight: '400',
+        fontFamily: 'Arial'
     },
     complete: {}
 }

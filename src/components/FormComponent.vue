@@ -117,6 +117,15 @@
         box-sizing: border-box;
     }
 
+    #iban-element {
+        width: 100%;
+        padding: 12px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
     input[type="text"], input[type="email"] {
         width: 100%;
         padding: 12px;
