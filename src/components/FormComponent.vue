@@ -1,30 +1,18 @@
 <template>
     <div class="container">
-        <form v-on:submit.prevent="submitForm">
+        <form v-on:submit.prevent="submitForm" id="payment-form">
             <div class="row">
                 <div class="col-25">
-                    <label for="firstName">{{$t('firstName.label')}}</label>
+                    <label for="name">{{$t('name.label')}}</label>
                 </div>
                 <div class="col-75">
                     <input
                             type="text"
-                            id="firstName"
-                            name="firstName"
-                            :placeholder="$t('firstName.placeholder')"
+                            id="name"
+                            name="nName"
+                            :placeholder="$t('name.placeholder')"
+                            required
                             v-model="name"
-                    />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-25">
-                    <label for="lastName">{{$t('lastName.label')}}</label>
-                </div>
-                <div class="col-75">
-                    <input
-                            type="text"
-                            id="lastName"
-                            name="lastName"
-                            :placeholder="$t('lastName.placeholder')"
                     />
                 </div>
             </div>
@@ -37,7 +25,8 @@
                             type="email"
                             id="email"
                             name="email"
-                            placeholder="test@test.com"
+                            :placeholder="$t('label.placeholder')"
+                            v-model="customerEmail"
                             disabled
                     />
                 </div>
@@ -49,6 +38,9 @@
                 <div class="col-75" id="iban">
                     <div id="iban-element"></div>
                 </div>
+            </div>
+            <div class="row">
+                <div id="error-message"></div>
             </div>
             <div class="row">
                 <div class="label">
@@ -69,6 +61,7 @@
 
     import {loadStripe} from "@stripe/stripe-js";
     import {COMPONENT_OPTIONS} from "../stripe/model/stripe.model";
+    import {error} from "vue-i18n/src/util";
 
     @Component({})
     export default class FormComponent extends Vue {
@@ -76,16 +69,33 @@
 
         private name = "";
         private stripe;
+        private ibanElement; //DE89 3704 0044 0532 0130 00
+        private publicKey;
+        private clientSecret;
+        private customerEmail;
 
         constructor() {
             super();
+            const urlParams = new URLSearchParams(window.location.search);
+            this.publicKey = urlParams.get('pk') !== null ? urlParams.get('pk') : 'pk_test_TYooMQauvdEDq54NiTphI7jx';
+            this.clientSecret = urlParams.get('cs');
+            this.customerEmail = urlParams.get('customerEmail');
+        }
+
+        mounted() {
             this.init().then(response => {
                 this.stripe = response;
-                this.stripe.elements()
+                this.ibanElement = this.stripe.elements()
                     .create(StripeElement.IBAN, {
                         ...COMPONENT_OPTIONS, ...ELEMENT_CONFIG[StripeElement.IBAN]
-                    })
-                    .mount('#iban-element');
+                    });
+
+                this.ibanElement.mount('#iban-element');
+                this.ibanElement.on('change', (e) => this.displayIbanError(e));
+
+                const form = document.getElementById('payment-form');
+                form.addEventListener('submit', () => this.confirmSepa(this.stripe, this.ibanElement));
+
             }).catch(error => {
                 console.error("Error initializing stripe!", error);
             });
@@ -93,13 +103,69 @@
 
         async init() {
             return await new Promise((resolve, reject) => {
-                resolve(loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx'));
+                resolve(loadStripe(this.publicKey));
             });
         }
 
         public submitForm(e: Event) {
             e.stopPropagation();
-            console.log("Submitted!", this.name);
+        }
+
+        public displayIbanError(e) {
+            const displayError = document.getElementById('error-message');
+            if (e.error) {
+                displayError.textContent = e.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        }
+
+        public createSource(stripe, ibanElement) {
+
+            const sourceData = {
+                type: 'sepa_debit',
+                currency: 'eur',
+                owner: {
+                    name: this.name,
+                    email: 'TEST',
+                },
+                mandate: {
+                    // Automatically send a mandate notification email to your customer
+                    // once the source is charged.
+                    'notification_method': 'email',
+                },
+            };
+
+            stripe.createSource(ibanElement, sourceData).then(function (result) {
+                if (result.error) {
+                    // Inform the customer that there was an error.
+                    const errorElement = document.getElementById('error-message');
+                    errorElement.textContent = result.error.message;
+                } else {
+                    // Send the Source to your server.
+
+                    console.log("SUCCESS =========>", result.source);
+                }
+            });
+        }
+
+        public confirmSepa(stripe, ibanElement) {
+            stripe.confirmSepaDebitSetup(
+                this.clientSecret,
+                {
+                    "payment_method": {
+                        "sepa_debit": ibanElement,
+                        "billing_details": {
+                            name: this.name,
+                            email: this.customerEmail,
+                        },
+                    },
+                }
+            ).then(response => {
+                console.log("SUCCESS:", response);
+            }).catch((reason => {
+                console.error("FAIL:", reason)
+            }));
         }
     }
 </script>
