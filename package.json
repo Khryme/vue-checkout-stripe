@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@stripe/stripe-js": "^1.8.0",
+    "axios": "^0.19.2",
     "core-js": "^3.6.5",
     "rxjs": "^6.6.0",
     "vue": "^2.6.11",
@@ -18,7 +19,8 @@
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0",
     "vue-stripe-better-elements": "^2.0.1",
-    "vuex": "^3.4.0"
+    "vuex": "^3.4.0",
+    "vuex-class": "^0.3.2"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",

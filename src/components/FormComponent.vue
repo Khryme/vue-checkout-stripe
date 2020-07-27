@@ -1,5 +1,10 @@
 <template>
     <div class="container">
+        <!--        <div class="row">-->
+        <!--            <div class="col-25">-->
+        <!--                Back-->
+        <!--            </div>-->
+        <!--        </div>-->
         <form v-on:submit.prevent="submitForm" id="payment-form">
             <div class="row">
                 <div class="col-25">
@@ -40,7 +45,12 @@
                 </div>
             </div>
             <div class="row">
-                <div id="error-message"></div>
+                <div class="col-25" id="error-label">
+                    <label for="error"></label>
+                </div>
+                <div class="col-75" id="error">
+                    <div id="error-message"></div>
+                </div>
             </div>
             <div class="row">
                 <div class="label">
@@ -48,7 +58,7 @@
                 </div>
             </div>
             <div class="row">
-                <input type="submit" value="Submit"/>
+                <input type="submit" :value="$t('label.submit')"/>
             </div>
         </form>
     </div>
@@ -57,44 +67,56 @@
 <script lang="ts">
     import {Component, Prop, Vue} from "vue-property-decorator";
     import {ELEMENT_CONFIG, StripeElement} from "../stripe/model/StripeElement.model";
-    import {from} from "rxjs";
-
     import {loadStripe} from "@stripe/stripe-js";
     import {COMPONENT_OPTIONS} from "../stripe/model/stripe.model";
-    import {error} from "vue-i18n/src/util";
+    import {State, Action, Getter, Mutation} from 'vuex-class';
+    import {MUTATIONS} from '../store/mutations';
+    import {GETTERS} from "../store/getters";
+    import {ACTIONS} from "../store/actions";
 
     @Component({})
     export default class FormComponent extends Vue {
         @Prop() private msg!: string;
 
-        private name = "";
-        private stripe;
-        private ibanElement; //DE89 3704 0044 0532 0130 00
-        private publicKey;
-        private clientSecret;
-        private customerEmail;
+        // private ibanElement; //DE89 3704 0044 0532 0130 00
+        @Mutation(MUTATIONS.SET_STRIPE) setStripe: (stripe: any) => void;
+        @Mutation(MUTATIONS.SET_IBAN_ELEMENT) setIbanElement: (element: any) => void;
+        @Mutation(MUTATIONS.SET_CLIENT_SECRET) setClientSecret: (clientSecret: string) => void;
+        @Mutation(MUTATIONS.SET_PUBLIC_KEY) setPublicKey: (publicKey: string) => void;
+        @Mutation(MUTATIONS.SET_NAME) setName: (name: string) => void;
+        @Mutation(MUTATIONS.SET_CUSTOMER_EMAIL) setCustomerEmail: (customerEmail: string) => void;
+        @Getter(GETTERS.GET_STRIPE) stripe: any;
+        @Getter(GETTERS.GET_IBAN_ELEMENT) ibanElement: any;
+        @Getter(GETTERS.GET_CUSTOMER_EMAIL) customerEmail: string;
+        @Getter(GETTERS.GET_PUBLIC_KEY) publicKey: string;
+        @Getter(GETTERS.GET_NAME) getName: string;
+        @Getter(GETTERS.GET_CLIENT_SECRET) clientSecret: string;
+        @Action(ACTIONS.CONFIRM_SEPA) confirmSepa: () => Promise<unknown>;
 
         constructor() {
             super();
             const urlParams = new URLSearchParams(window.location.search);
-            this.publicKey = urlParams.get('pk') !== null ? urlParams.get('pk') : 'pk_test_TYooMQauvdEDq54NiTphI7jx';
-            this.clientSecret = urlParams.get('cs');
-            this.customerEmail = urlParams.get('customerEmail');
+            this.setPublicKey(urlParams.get('pk') !== null ? urlParams.get('pk') : 'pk_test_TYooMQauvdEDq54NiTphI7jx')
+            this.setClientSecret(urlParams.get('cs'));
+            this.setCustomerEmail(urlParams.get('customerEmail'));
         }
 
         mounted() {
             this.init().then(response => {
-                this.stripe = response;
-                this.ibanElement = this.stripe.elements()
+                this.setStripe(response);
+                this.setIbanElement(this.stripe.elements()
                     .create(StripeElement.IBAN, {
                         ...COMPONENT_OPTIONS, ...ELEMENT_CONFIG[StripeElement.IBAN]
-                    });
+                    }));
 
                 this.ibanElement.mount('#iban-element');
                 this.ibanElement.on('change', (e) => this.displayIbanError(e));
 
                 const form = document.getElementById('payment-form');
-                form.addEventListener('submit', () => this.confirmSepa(this.stripe, this.ibanElement));
+                form.addEventListener('submit', () => {
+                    debugger
+                    this.confirmSepa()
+                });
 
             }).catch(error => {
                 console.error("Error initializing stripe!", error);
@@ -107,65 +129,21 @@
             });
         }
 
+        get name() {
+            return this.getName;
+        }
+
+        set name(value) {
+            this.setName(value);
+        }
+
         public submitForm(e: Event) {
             e.stopPropagation();
         }
 
         public displayIbanError(e) {
             const displayError = document.getElementById('error-message');
-            if (e.error) {
-                displayError.textContent = e.error.message;
-            } else {
-                displayError.textContent = '';
-            }
-        }
-
-        public createSource(stripe, ibanElement) {
-
-            const sourceData = {
-                type: 'sepa_debit',
-                currency: 'eur',
-                owner: {
-                    name: this.name,
-                    email: 'TEST',
-                },
-                mandate: {
-                    // Automatically send a mandate notification email to your customer
-                    // once the source is charged.
-                    'notification_method': 'email',
-                },
-            };
-
-            stripe.createSource(ibanElement, sourceData).then(function (result) {
-                if (result.error) {
-                    // Inform the customer that there was an error.
-                    const errorElement = document.getElementById('error-message');
-                    errorElement.textContent = result.error.message;
-                } else {
-                    // Send the Source to your server.
-
-                    console.log("SUCCESS =========>", result.source);
-                }
-            });
-        }
-
-        public confirmSepa(stripe, ibanElement) {
-            stripe.confirmSepaDebitSetup(
-                this.clientSecret,
-                {
-                    "payment_method": {
-                        "sepa_debit": ibanElement,
-                        "billing_details": {
-                            name: this.name,
-                            email: this.customerEmail,
-                        },
-                    },
-                }
-            ).then(response => {
-                console.log("SUCCESS:", response);
-            }).catch((reason => {
-                console.error("FAIL:", reason)
-            }));
+            displayError.textContent = e.error ? e.error.message : '';
         }
     }
 </script>
@@ -217,7 +195,7 @@
     }
 
     input[type="submit"] {
-        background-color: #4caf50;
+        background-color: #2d4ed7;
         color: white;
         padding: 12px 20px;
         border: none;
@@ -226,13 +204,13 @@
         float: right;
 
         &:hover {
-            background-color: #45a049;
+            background-color: #2d4ed1;
         }
     }
 
     .container {
         border-radius: 5px;
-        background-color: #f2f2f2;
+        /*background-color: #f2f2f2;*/
         padding: 20px;
     }
 
@@ -260,6 +238,11 @@
         padding-top: 8px;
     }
 
+    #error {
+        padding: 8px 0;
+        color: #eb1c26;
+    }
+
     @media screen and (max-width: 600px) {
         .col-25 {
             width: 100%;
@@ -272,6 +255,12 @@
         input[type="submit"] {
             width: 100%;
             margin-top: 0;
+        }
+        #error {
+            padding: 4px 0;
+        }
+        #error-label {
+            display: none;
         }
     }
 </style>
