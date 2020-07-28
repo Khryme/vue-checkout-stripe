@@ -2,7 +2,7 @@ import {LocaleMessages} from 'vue-i18n';
 
 export const messages: LocaleMessages = {
   'en-US': {
-    'name.label' : 'Full Name',
+    'name.label' : 'Name',
     'name.placeholder' : 'Insert your full name',
     'label.email' : 'Email address',
     'label.placeholder' : 'Insert your email address',
@@ -10,7 +10,7 @@ export const messages: LocaleMessages = {
     'label.submit': 'Set up SEPA Direct Debit'
   },
   'it-IT': {
-    'name.label' : 'Nome completo',
+    'name.label' : 'Nome',
     'name.placeholder' : 'Inserisci il tuo nome completo',
     'label.email' : 'Indirizzo email',
     'label.placeholder' : 'Inserisci il tuo indirizzo email',

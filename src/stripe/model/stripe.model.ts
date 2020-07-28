@@ -5,6 +5,13 @@ export const COMPONENT_STYLE = {
         fontWeight: "400",
         fontFamily: "Arial"
     },
+    invalid: {
+        color: "#D32F2F",
+        iconColor: "#fa755a",
+        ":-webkit-autofill": {
+            color: "#D32F2F"
+        }
+    },
     complete: {}
 };
 

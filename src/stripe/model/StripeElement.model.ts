@@ -10,6 +10,6 @@ export const ELEMENT_CONFIG = {
     [StripeElement.IBAN]: {
         supportedCountries: ['SEPA'],
         placeholderCountry: 'IT',
-        hideIcon: true
+        hideIcon: false
     }
 }
