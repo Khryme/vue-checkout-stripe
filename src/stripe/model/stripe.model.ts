@@ -3,7 +3,7 @@ export const COMPONENT_STYLE = {
         fontSize: "13px",
         fontSmoothing: "antialiased",
         fontWeight: "400",
-        fontFamily: "Arial"
+        fontFamily: "'Open Sans', sans-serif"
     },
     invalid: {
         color: "#D32F2F",

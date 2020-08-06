@@ -1,10 +1,12 @@
 <template>
   <div class="container">
-    <!--        <div class="row">-->
-    <!--            <div class="col-25">-->
-    <!--                Back-->
-    <!--            </div>-->
-    <!--        </div>-->
+            <div class="rowLeft">
+              <div class="backWrapper" v-on:click="cancel">
+                <i class="arrow left"></i>
+                <span>Aranha bjj</span>
+              </div>
+
+            </div>
     <form v-on:submit.prevent="submitForm" id="payment-form">
       <div class="row">
         <div class="col-25">
@@ -92,6 +94,7 @@ export default class FormComponent extends Vue {
   @Getter(GETTERS.GET_NAME) getName: string;
   @Getter(GETTERS.GET_CLIENT_SECRET) clientSecret: string;
   @Action(ACTIONS.CONFIRM_SEPA) confirmSepa: () => Promise<unknown>;
+  @Action(ACTIONS.CANCEL) cancelOperation: () => Promise<unknown>
 
   constructor() {
     super();
@@ -114,7 +117,11 @@ export default class FormComponent extends Vue {
 
       const form = document.getElementById('payment-form');
       form.addEventListener('submit', () => {
-        this.confirmSepa()
+        this.confirmSepa().then( (response: any) => {
+          console.debug("confirming sepa response", response);
+        }).catch( error => {
+          console.debug("error confirming sepa", error);
+        })
       });
 
     }).catch(error => {
@@ -153,16 +160,22 @@ export default class FormComponent extends Vue {
     }
   }
 
+  public cancel(e) {
+    e.stopPropagation();
+    console.debug("operation canceled");
+    this.cancelOperation();
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-/* Clear floats after the columns */
-/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap');
+
 * {
   box-sizing: border-box;
-  //font-family: 'Open Sans';
+  font-family: 'Open Sans', sans-serif;
   font-style: normal;
   font-weight: 300;
 }
@@ -184,7 +197,17 @@ export default class FormComponent extends Vue {
   }
 }
 
+.arrow {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
 
+.left {
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+}
 
 .error {
   border: 1px solid #fa755a !important;
@@ -226,6 +249,11 @@ input[type="submit"] {
   }
 }
 
+.input-disabled {
+  background: gray;
+  cursor: default;
+}
+
 .container {
   border-radius: 6px;
   background-color: #f2f2f2;
@@ -257,6 +285,20 @@ input[type="submit"] {
     content: "";
     display: table;
     clear: both;
+  }
+}
+
+.rowLeft {
+  display: flex;
+  min-height: 32px;
+  justify-content: flex-start;
+
+}
+.backWrapper {
+  cursor: pointer;
+  padding-bottom: 12px;
+  i {
+    margin-right: 8px;
   }
 }
 

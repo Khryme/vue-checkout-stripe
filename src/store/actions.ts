@@ -7,7 +7,9 @@ import {MUTATIONS} from "./mutations";
 export enum ACTIONS {
     INIT = 'INIT',
     CONFIRM_SEPA = 'confirmSepa',
-    SUCCESS = 'success'
+    SUCCESS = 'success',
+    ERROR = 'error',
+    CANCEL = 'cancel'
 }
 
 export const actions: ActionTree<RootState, RootState> = {
@@ -24,32 +26,32 @@ export const actions: ActionTree<RootState, RootState> = {
                 },
             }
         ).then(response => {
-            // axios.get('https://arya.page.link/?apn=com.arya.checkin&ibi=com.arya.checkin&link=https%3A%2F%2Fexample.com%2Fpayment%2Fsuccess')
-            // .then( response => {
-            //     console.log('SUCCESS', response);
-            // })
-            // .catch( reason => {
-            //     console.error('FAIL', reason);
-            // })
+            console.debug("confirm sepa debit setup response:", response);
             if(response.setupIntent) {
-                console.log("SUCCESS", response);
+                console.debug("sepa debit success:", response.setupIntent);
+                return axios.get('arya.page.link/?apn=com.arya.checkin&ibi=com.arya.checkin&link=https%3A%2F%2Fexample.com%2Fpayment%2Fsuccess')
             }
             if(response.error) {
-                console.log("ERROR", response);
+                console.debug("sepa debit thrown error:", response.error);
+                return axios.get('arya.page.link/?apn=com.arya.checkin&ibi=com.arya.checkin&link=https%3A%2F%2Fexample.com%2Ferror')
             }
         }).catch((reason => {
-            console.error("FAIL:", reason)
+            console.debug("confirm sepa debit setup rejected, reason:", reason);
         }));
     },
-    [ACTIONS.SUCCESS]: ({ commit }, {stripe, iban}) => {
-        // axios({
-        //     url: 'https://....'
-        // }).then((response) => {
-        //     const payload: User = response && response.data;
-        //     commit('profileLoaded', payload);
-        // }, (error) => {
-        //     console.log(error);
-        //     commit('profileError');
-        // });
+    [ACTIONS.SUCCESS]: ({ commit }) => {
+        axios.get('arya.page.link/?apn=com.arya.checkin&ibi=com.arya.checkin&link=https%3A%2F%2Fexample.com%2Fpayment%2Fsuccess')
+            .then( (response: any) => {
+                return response;
+            })
+    },
+    [ACTIONS.ERROR]: ({ commit }) => {
+        axios.get('arya.page.link/?apn=com.arya.checkin&ibi=com.arya.checkin&link=https%3A%2F%2Fexample.com%2Ferror')
+            .then( (response: any) => {
+                console.debug('SUCCESS', response);
+            })
+    },
+    [ACTIONS.CANCEL]: ({ commit }) => {
+        return axios.get('arya.page.link/?apn=com.arya.checkin&ibi=com.arya.checkin&link=https%3A%2F%2Fexample.com%2Faccount');
     }
 };
